@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "cargo",           // Tipo de tarea (comando cargo)
+      "command": "build",        // Ejecuta 'cargo build'
+      "label": "cargo build",    // Nombre de la tarea
+      "problemMatcher": ["$rustc"], // Detecta errores de compilación
+      "group": {
+        "kind": "build",
+        "isDefault": true        // Tarea por defecto al presionar Cmd+Shift+B
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "configurations": [
+    {
+      "type": "lldb",              // Debugger para Rust (necesitas extensión CodeLLDB)
+      "request": "launch",          // Inicia el programa
+      "name": "Debug Axum Tutorial", // Nombre que aparece en el menú de debug
+      "program": "${workspaceFolder}/target/debug/axum_tutorial", // Ejecutable compilado
+      "args": [],                   // Argumentos de línea de comandos
+      "cwd": "${workspaceFolder}",  // Directorio de trabajo
+      "preLaunchTask": "cargo build debug" // Tarea a ejecutar ANTES de depurar
+    }
+  ]
+}
