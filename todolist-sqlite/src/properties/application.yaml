@@ -4,3 +4,7 @@ server:
 
 app:
   prefix: "/api"
+
+openapi:
+  ui_path: "/swagger-ui"
+  json_path: "/api-docs/openapi.json"

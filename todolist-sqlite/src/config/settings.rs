@@ -1,3 +1,5 @@
+use core::str;
+
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -12,9 +14,16 @@ pub struct AppConfig {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct OpenApiConfig {
+    pub ui_path: String,
+    pub json_path: String,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct AppSettings {
     pub server: ServerConfig,
     pub app: AppConfig,
+    pub openapi: OpenApiConfig,
 }
 
 impl AppSettings {

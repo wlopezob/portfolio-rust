@@ -1,7 +1,8 @@
 [package]
 name = "axum_tutorial"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2024"
+description = "An axum todo list project"
 
 [dependencies]
 async-trait = "0.1.89"
@@ -11,3 +12,6 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 sqlite = "0.37.0"
 tokio = { version = "1.48.0" , features = ["full"] }
+utoipa = { version = "5.4.0", features = ["axum_extras"] }
+utoipa-axum = "0.2.0"
+utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }

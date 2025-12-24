@@ -10,6 +10,7 @@ A production-ready REST API built with Rust, featuring a clean architecture patt
 - **Type Safety**: Leveraging Rust's strong type system
 - **RESTful API**: Complete CRUD operations
 - **SQLite Database**: Lightweight embedded database
+- **OpenAPI/Swagger**: Auto-generated interactive API documentation
 - **Configuration Management**: External configuration file support
 - **Hot Reload**: Development mode with auto-restart
 
@@ -20,6 +21,7 @@ A production-ready REST API built with Rust, featuring a clean architecture patt
 - [Installation](#installation)
 - [Usage](#usage)
 - [API Endpoints](#api-endpoints)
+- [OpenAPI & Swagger UI](#openapi--swagger-ui)
 - [Project Structure](#project-structure)
 - [Sequence Diagrams](#sequence-diagrams)
 - [Development](#development)
@@ -53,6 +55,8 @@ This project follows a layered architecture pattern:
 - **Runtime**: [Tokio](https://tokio.rs/) - Async runtime
 - **Database**: [SQLite](https://www.sqlite.org/) via `sqlite` crate
 - **Serialization**: [Serde](https://serde.rs/) - JSON handling
+- **Documentation**: [utoipa](https://github.com/juhaku/utoipa) - OpenAPI generation
+- **API Testing**: [utoipa-swagger-ui](https://github.com/juhaku/utoipa) - Interactive UI
 - **Configuration**: Custom config management
 
 ## 📦 Installation
@@ -128,6 +132,41 @@ curl -X PUT http://localhost:8080/api/v1/todo/1 \
 ```bash
 curl -X DELETE http://localhost:8080/api/v1/todo/1
 ```
+
+## 📚 OpenAPI & Swagger UI
+
+This project includes **automatic API documentation** using OpenAPI 3.0 and an interactive Swagger UI interface.
+
+### Access Documentation
+
+- **Swagger UI**: http://localhost:8080/api/swagger-ui
+- **OpenAPI JSON**: http://localhost:8080/api/api-docs/openapi.json
+
+### Features
+
+✅ **Auto-generated documentation** from Rust code  
+✅ **Interactive testing** directly in the browser  
+✅ **Type-safe** - Documentation synchronized with code  
+✅ **Zero runtime overhead** - Generated at compile time  
+
+### Quick Start
+
+1. Start the server: `cargo run`
+2. Open http://localhost:8080/api/swagger-ui in your browser
+3. Try out endpoints directly from the UI:
+   - Click on any endpoint to expand
+   - Click "Try it out"
+   - Fill in parameters/request body
+   - Click "Execute" to see the response
+
+### Implementation
+
+The OpenAPI integration uses:
+- **`utoipa`** - Core OpenAPI generation
+- **`utoipa-axum`** - Axum-specific helpers
+- **`utoipa-swagger-ui`** - Embedded Swagger UI
+
+For detailed implementation guide, see **[OPENAPI.md](OPENAPI.md)**
 
 ## 📁 Project Structure
 
