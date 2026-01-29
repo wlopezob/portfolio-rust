@@ -1,58 +1,60 @@
 # Google Cloud Logging MCP Server
 
-MCP server para consultar Google Cloud Logging usando `gcloud` CLI como wrapper confiable.
+MCP server to query Google Cloud Logging using `gcloud` CLI as a reliable wrapper.
 
-## Características
+## Features
 
-- 🔌 **MCP v2024-11-05**: Integración con Claude Desktop
-- 🔍 **Filtros flexibles**: resource type, log name, namespace, pod, severity, tiempo
-- ⏱️ **Tiempos relativos**: `1h`, `2d` o RFC3339 absolutos
-- 🔄 **Retry automático**: 3 intentos con backoff exponencial
-- ✅ **Confiable**: Usa `gcloud` para evitar HTTP 500 de la API directa
+- 🔌 **MCP v2024-11-05**: Claude Desktop integration
+- 🔍 **Flexible filters**: resource type, log name, namespace, pod, severity, time
+- ⏱️ **Relative times**: `1h`, `2d` or absolute RFC3339
+- 🔄 **Automatic retry**: 3 attempts with exponential backoff
+- ✅ **Reliable**: Uses `gcloud` to avoid direct API HTTP 500 errors
 
-## Inicio Rápido
+## Quick Start
 
 ```bash
-# 1. Autenticación
+# 1. Authentication
 gcloud auth application-default login
 
-# 2. Compilar y ejecutar
+# 2. Build and run
 cargo run --release
 
-# 3. Configurar Claude Desktop
-# Editar: ~/Library/Application Support/Claude/claude_desktop_config.json
-{
-  "mcpServers": {
-    "gcp-logging": {
-      "type": "http",
-      "url": "http://127.0.0.1:8766/mcp"
-    }
-  }
-}
+# 3. Configure with Claude Code CLI
+claude mcp add wlopezob-gcp-logging --type http --url http://127.0.0.1:8766/mcp
+
+# Alternatively, edit manually: ~/Library/Application Support/Claude/claude_desktop_config.json
+# {
+#   "mcpServers": {
+#     "wlopezob-gcp-logging": {
+#       "type": "http",
+#       "url": "http://127.0.0.1:8766/mcp"
+#     }
+#   }
+# }
 ```
 
-## Prerrequisitos
+## Prerequisites
 
 - **Rust 1.75+**: `rustc --version`
 - **Google Cloud SDK**: `gcloud --version`
-- **Permisos GCP**: `roles/logging.viewer`
+- **GCP Permissions**: `roles/logging.viewer`
 
-## Herramienta `list_logs`
+## `list_logs` Tool
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| `project_id` | string | Sí | ID del proyecto GCP |
-| `resource_type` | string | No | Tipo de recurso (ej: `k8s_node`, `k8s_pod`) |
-| `log_name` | string | No | Nombre del log (substring) |
-| `namespace` | string | No | Namespace de Kubernetes |
-| `pod_name` | string | No | Nombre del pod (substring) |
-| `severity` | string | No | Severidad (`ERROR`, `WARNING`, `INFO`) |
-| `since` | string | No | Tiempo inicio (`1h`, `2d`, RFC3339) |
-| `until` | string | No | Tiempo fin (RFC3339) |
-| `limit` | number | No | Máx. logs (default: 20, max: 1000) |
-| `order` | string | No | Orden: `asc` o `desc` (default) |
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `project_id` | string | Yes | GCP project ID |
+| `resource_type` | string | No | Resource type (e.g., `k8s_node`, `k8s_pod`) |
+| `log_name` | string | No | Log name (substring) |
+| `namespace` | string | No | Kubernetes namespace |
+| `pod_name` | string | No | Pod name (substring) |
+| `severity` | string | No | Severity (`ERROR`, `WARNING`, `INFO`) |
+| `since` | string | No | Start time (`1h`, `2d`, RFC3339) |
+| `until` | string | No | End time (RFC3339) |
+| `limit` | number | No | Max logs (default: 20, max: 1000) |
+| `order` | string | No | Order: `asc` or `desc` (default) |
 
-**Ejemplo**:
+**Example**:
 ```json
 {
   "project_id": "my-gcp-project",
@@ -65,97 +67,97 @@ cargo run --release
 }
 ```
 
-## Uso con Claude Code CLI
+## Usage with Claude Code CLI
 
-Una vez que el servidor esté corriendo, puedes usar Claude CLI para consultar logs:
+Once the server is running, you can use Claude CLI to query logs:
 
 ```bash
-claude "usa el mcp gcp-logging para el projectid: my-gcp-project, type: k8s_node, logName: application-logs, namespace: production, pod_name: web-server, obten los logs desde 1h y de forma descendente, quiero los primeros 20 registros"
+claude "use the wlopezob-gcp-logging mcp for projectid: my-gcp-project, type: k8s_node, logName: application-logs, namespace: production, pod_name: web-server, get logs from the last 1h in descending order, I want the first 20 records"
 ```
 
-**Nota**: El servidor debe estar corriendo (`cargo run --release`) antes de ejecutar comandos con Claude CLI.
+**Note**: The server must be running (`cargo run --release`) before executing Claude CLI commands.
 
-## Rendimiento
+## Performance
 
-| Rango de Tiempo | Duración Esperada |
-|-----------------|-------------------|
-| `10m` | 2-5 segundos |
-| `1h` | 5-15 segundos ✅ |
-| `1d` | 30-90 segundos |
-| `2d` | 1-5 minutos (puede requerir retry) |
-| Sin `since` | 30-120 segundos (default: 24h) |
+| Time Range | Expected Duration |
+|------------|-------------------|
+| `10m` | 2-5 seconds |
+| `1h` | 5-15 seconds ✅ |
+| `1d` | 30-90 seconds |
+| `2d` | 1-5 minutes (may require retry) |
+| No `since` | 30-120 seconds (default: 24h) |
 
-**Optimización**:
-- Usa rangos de tiempo pequeños (`1h` recomendado)
-- Agrega `resource_type` para aprovechar índices GCP
-- El servidor reintenta automáticamente en HTTP 500
+**Optimization**:
+- Use small time ranges (`1h` recommended)
+- Add `resource_type` to leverage GCP indexes
+- Server automatically retries on HTTP 500
 
-## Arquitectura
+## Architecture
 
 ```
 src/
-├── main.rs          # Setup HTTP server (axum)
+├── main.rs          # HTTP server setup (axum)
 ├── auth.rs          # AuthProvider trait + caching
-├── filters.rs       # Construcción de filtros GCP
-├── formatter.rs     # Formateo de logs (text/json)
+├── filters.rs       # GCP filter construction
+├── formatter.rs     # Log formatting (text/json)
 ├── gcloud/
 │   ├── client.rs    # GcloudClient + LoggingClient trait
-│   └── retry.rs     # RetryPolicy con backoff exponencial
+│   └── retry.rs     # RetryPolicy with exponential backoff
 ├── models.rs        # LogEntry, Resource
-├── request.rs       # ListLogsRequest + validación
+├── request.rs       # ListLogsRequest + validation
 ├── server.rs        # CloudLoggingService (MCP)
-└── time.rs          # TimeParser (RFC3339 + relativos)
+└── time.rs          # TimeParser (RFC3339 + relative)
 ```
 
-**¿Por qué `gcloud` CLI?**  
-La API directa retorna HTTP 500 con ciertos filtros (~40% tasa de fallo). `gcloud` es 100% confiable.
+**Why `gcloud` CLI?**  
+Direct API returns HTTP 500 with certain filters (~40% failure rate). `gcloud` is 100% reliable.
 
-**¿Por qué HTTP en vez de stdio?**  
-- Soporta múltiples clientes
-- Mejor para debugging (curl, inspector)
-- Monitoreo más fácil
-- Trade-off: requiere inicio manual
+**Why HTTP instead of stdio?**  
+- Supports multiple clients
+- Better for debugging (curl, inspector)
+- Easier monitoring
+- Trade-off: requires manual start
 
 ## Troubleshooting
 
-### Queries Lentas
+### Slow Queries
 
-**Esperado**: Queries de 1-5 minutos con rangos grandes. El retry automático maneja HTTP 500.
+**Expected**: 1-5 minute queries with large ranges. Automatic retry handles HTTP 500.
 
-**Soluciones**:
-- Usa `since: "1h"` (rápido) en vez de `2d` (lento)
-- Agrega `resource_type` para aprovechar índices
-- Sin `since` → default automático 24h
+**Solutions**:
+- Use `since: "1h"` (fast) instead of `2d` (slow)
+- Add `resource_type` to leverage indexes
+- No `since` → automatic 24h default
 
-### Error "gcloud command failed"
+### "gcloud command failed" Error
 
 ```bash
-# Verificar instalación
+# Verify installation
 which gcloud
 gcloud --version
 
-# Autenticar
+# Authenticate
 gcloud auth application-default login
 ```
 
-### Error de permisos
+### Permission Error
 
 ```bash
 gcloud projects add-iam-policy-binding PROJECT_ID \
-  --member="user:tu-email@example.com" \
+  --member="user:your-email@example.com" \
   --role="roles/logging.viewer"
 ```
 
-## Desarrollo
+## Development
 
 ```bash
-cargo build          # Compilar
-cargo run --release  # Ejecutar
+cargo build          # Build
+cargo run --release  # Run
 cargo test           # Tests
 cargo clippy         # Linter
 ```
 
-## Licencia
+## License
 
 MIT License
 

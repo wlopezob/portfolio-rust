@@ -73,24 +73,3 @@ impl LogFormatter for TextLogFormatter {
         output
     }
 }
-
-/// JSON formatter for log entries (machine-readable)
-pub struct JsonLogFormatter;
-
-impl JsonLogFormatter {
-    pub fn new() -> Self {
-        Self
-    }
-}
-
-impl Default for JsonLogFormatter {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl LogFormatter for JsonLogFormatter {
-    fn format(&self, logs: &[LogEntry]) -> String {
-        serde_json::to_string_pretty(logs).unwrap_or_else(|_| "[]".to_string())
-    }
-}
