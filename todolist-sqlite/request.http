@@ -1,0 +1,27 @@
+@baseUrl = http://localhost:8080/api
+### 1. Get the id parameter from the request path.
+GET {{baseUrl}}/todo/8
+
+### 2. Get all todo items.
+GET {{baseUrl}}/todo
+
+### 3. Save a new todo item.
+POST {{baseUrl}}/todo
+Content-Type: application/json
+
+{
+  "title": "New Todo Item 09",
+  "completed": false
+}
+
+### 4. Update an existing todo item.
+PUT {{baseUrl}}/todo/8
+Content-Type: application/json
+
+{
+  "title": "Updated Todo Item 08",
+  "completed": true
+}
+
+### 5. Delete a todo item by id.
+DELETE {{baseUrl}}/todo/3

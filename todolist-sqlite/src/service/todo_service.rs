@@ -1,118 +1,96 @@
+use std::sync::Arc;
+
 use crate::{
-    model::{todo_item_request::TodoItemRequest, todo_item_response::TodoItemResponse},
-    types::Db,
+    model::{api_exception::ApiException, todo_item_model::TodoItemModel, todo_item_request::TodoItemRequest, todo_item_response::{self, TodoItemResponse}}, repository::todo_repository::TodoRepositoryInterface, types::Db
 };
 
 #[async_trait::async_trait]
 pub trait TodoServiceInterface: Send + Sync {
-    async fn create(&self, db: &Db, todo_item: TodoItemRequest)
-    -> Result<TodoItemResponse, String>;
-    async fn get_all(&self, db: &Db) -> Result<Vec<TodoItemResponse>, String>;
-    async fn get_by_id(&self, db: &Db, id: i64) -> Result<TodoItemResponse, String>;
-    async fn update(&self, db: &Db, id: i64, todo_item: TodoItemRequest) -> Result<TodoItemResponse, String>;
-    async fn delete_by_id(&self, db: &Db, id: i64) -> Result<(), String>;
+    async fn create(&self, todo_item: TodoItemRequest)
+    -> Result<TodoItemResponse, ApiException>;
+    async fn get_all(&self) -> Result<Vec<TodoItemResponse>, ApiException>;
+    async fn get_by_id(&self, id: i64) -> Result<TodoItemResponse, ApiException>;
+    async fn update(&self, id: i64, todo_item: TodoItemRequest) -> Result<TodoItemResponse, ApiException>;
+    async fn delete_by_id(&self, id: i64) -> Result<(), ApiException>;
 }
 
-pub struct TodoServiceImpl;
+pub struct TodoServiceImpl {
+    todo_repository: Arc<dyn TodoRepositoryInterface>,
+}
+
+impl TodoServiceImpl {
+    pub fn new(todo_repository: Arc<dyn TodoRepositoryInterface>) -> Self {
+        Self { todo_repository }
+    }
+}
 
 #[async_trait::async_trait]
 impl TodoServiceInterface for TodoServiceImpl {
     async fn create(
         &self,
-        db: &Db,
         todo_item: TodoItemRequest,
-    ) -> Result<TodoItemResponse, String> {
-        let connection = db.lock().unwrap();
-        let mut statement = connection
-            .prepare("INSERT INTO todos (title, completed) VALUES (?, ?)")
-            .unwrap();
-        statement.bind((1, todo_item.title.as_str())).unwrap();
-        statement
-            .bind((2, if todo_item.completed { 1 } else { 0 }))
-            .unwrap();
-        statement.next().unwrap();
-
-        // obtain the last inserted id
-        let mut statement = connection.prepare("SELECT last_insert_rowid()").unwrap();
-        statement.next().unwrap();
-
-        let response_payload = TodoItemResponse {
-            id: Option::Some(statement.read::<i64, _>(0).unwrap()),
+    ) -> Result<TodoItemResponse, ApiException> {
+        let todo_item = TodoItemModel {
+            id: 0,
             title: todo_item.title,
             completed: todo_item.completed,
+        };
+        let todo_item_response = self.todo_repository.create(todo_item).await?;
+        
+        let response_payload = TodoItemResponse {
+            id: Some(todo_item_response.id),
+            title: todo_item_response.title,
+            completed: todo_item_response.completed,
         };
 
         Ok(response_payload)
     }
 
-    async fn get_all(&self, db: &Db) -> Result<Vec<TodoItemResponse>, String> {
-        let connection = db.lock().unwrap();
-        let query = "SELECT id, title, completed FROM todos";
-
-        let mut statement = connection.prepare(query).unwrap();
-        statement.next().unwrap();
-
-        let todos = statement
+    async fn get_all(&self) -> Result<Vec<TodoItemResponse>, ApiException> {
+        let item_responses = self.todo_repository.get_all().await?;
+        let todos = item_responses
             .iter()
-            .map(|row| row.unwrap())
             .map(|row| TodoItemResponse {
-                id: Option::Some(row.read::<i64, _>("id")),
-                title: row.read::<&str, _>("title").to_string(),
-                completed: row.read::<i64, _>("completed") != 0,
+                id: Some(row.id),
+                title: row.title.clone(),
+                completed: row.completed,
             })
             .collect::<Vec<TodoItemResponse>>();
         Ok(todos)
     }
 
-    async fn get_by_id(&self, db: &Db, id: i64) -> Result<TodoItemResponse, String> {
-        let connection = db.lock().unwrap();
-        let query = "SELECT id, title, completed FROM todos WHERE id = ?";
-
-        let mut statement = connection.prepare(query).unwrap();
-        statement.bind((1, id)).unwrap();
-
-        let todo_item = statement
-            .iter()
-            .map(|row| row.unwrap())
+    async fn get_by_id(&self, id: i64) -> Result<TodoItemResponse, ApiException> {
+        self.todo_repository.get_by_id(id).await?
+            .ok_or_else(|| ApiException::NotFound(format!("Todo item with {} not found", id)))
             .map(|row| TodoItemResponse {
-                id: Option::Some(row.read::<i64, _>("id")),
-                title: row.read::<&str, _>("title").to_string(),
-                completed: row.read::<i64, _>("completed") != 0,
+                id: Some(row.id),
+                title: row.title,
+                completed: row.completed,
             })
-            .last();
-
-        todo_item.ok_or_else(|| format!("Todo item with id {} not found", id))
     }
 
-    async fn update(&self, db: &Db, id: i64, todo_item: TodoItemRequest) -> Result<TodoItemResponse, String> {
-        let connection = db.lock().unwrap();
-        let query = "UPDATE todos SET title = ?, completed = ? WHERE id = ?";
-
-        let mut statement = connection.prepare(query).unwrap();
-        statement.bind((1, todo_item.title.as_str())).unwrap();
-        statement
-            .bind((2, if todo_item.completed { 1 } else { 0 }))
-            .unwrap();
-        statement.bind((3, id)).unwrap();
-        statement.next().unwrap();
-
-        let rs = TodoItemResponse {
-            id: Some(id),
+    async fn update(&self, id: i64, todo_item: TodoItemRequest) -> Result<TodoItemResponse, ApiException> {
+        let todo_item = TodoItemModel {
+            id,
             title: todo_item.title,
             completed: todo_item.completed,
         };
-
-        Ok(rs)
+        let todo_item_response =self.todo_repository.update(id, todo_item).await?;
+        let response_payload = TodoItemResponse {
+            id: Some(todo_item_response.id),
+            title: todo_item_response.title,
+            completed: todo_item_response.completed,
+        };
+        Ok(response_payload)
     }
 
-    async fn delete_by_id(&self, db: &Db, id: i64) -> Result<(), String> {
-        let connection = db.lock().unwrap();
-        let query = "DELETE FROM todos WHERE id = ?";
-
-        let mut statement = connection.prepare(query).unwrap();
-        statement.bind((1, id)).unwrap();
-        statement.next().unwrap();
-
+    async fn delete_by_id(&self, id: i64) -> Result<(), ApiException> {
+        let todo_item = self.todo_repository.get_by_id(id).await?
+            .ok_or_else(|| ApiException::NotFound(format!("Todo item with {} not found", id)))?;
+        if todo_item.completed {
+            return Err(ApiException::BadRequest("Cannot delete a completed todo item".to_string()));
+        }
+        self.todo_repository.delete_by_id(id).await?;
         Ok(())
     }
 }

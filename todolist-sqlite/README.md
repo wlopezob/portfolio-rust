@@ -22,6 +22,7 @@ A production-ready REST API built with Rust, featuring a clean architecture patt
 - [Usage](#usage)
 - [API Endpoints](#api-endpoints)
 - [OpenAPI & Swagger UI](#openapi--swagger-ui)
+- [Error Handling with thiserror](#error-handling-with-thiserror)
 - [Project Structure](#project-structure)
 - [Sequence Diagrams](#sequence-diagrams)
 - [Development](#development)
@@ -167,6 +168,77 @@ The OpenAPI integration uses:
 - **`utoipa-swagger-ui`** - Embedded Swagger UI
 
 For detailed implementation guide, see **[OPENAPI.md](OPENAPI.md)**
+
+## 🔧 Error Handling with thiserror
+
+This project implements **robust error handling** using `thiserror` for automatic error type conversions and comprehensive error propagation throughout all application layers.
+
+### Features
+
+✅ **Automatic error conversion** with `From` trait implementation  
+✅ **Type-safe error propagation** using the `?` operator  
+✅ **Custom error types** with meaningful messages  
+✅ **HTTP status code mapping** for REST API responses  
+
+### Quick Example
+
+**Repository Layer (Automatic Conversion):**
+```rust
+async fn get_by_id(&self, id: i64) -> Result<Option<TodoItemModel>, ApiException> {
+    let connection = self.db.lock()?;  // PoisonError → ApiException
+    let mut statement = connection.prepare(query)?;  // sqlite::Error → ApiException
+    statement.bind((1, id))?;  // Automatic conversion
+    
+    if statement.next()? == sqlite::State::Row {
+        Ok(Some(TodoItemModel {
+            id: statement.read::<i64, _>("id")?,  // Clean with ?
+            title: statement.read::<String, _>("title")?,
+            completed: statement.read::<i64, _>("completed")? != 0,
+        }))
+    } else {
+        Ok(None)
+    }
+}
+```
+
+**Service Layer (Business Logic):**
+```rust
+async fn get_by_id(&self, id: i64) -> Result<TodoItemResponse, ApiException> {
+    self.todo_repository.get_by_id(id).await?
+        .ok_or_else(|| ApiException::NotFound(format!("Todo item with {} not found", id)))
+        .map(|row| TodoItemResponse { /* transform */ })
+}
+```
+
+### Error Response Format
+
+All errors return a standardized JSON response:
+
+```json
+{
+  "code": "404 Not Found",
+  "message": "Todo item with 5 not found"
+}
+```
+
+### Key Benefits
+
+1. **No repetitive error handling**: The `?` operator automatically converts errors
+2. **Type safety**: Compiler ensures all errors are handled
+3. **Consistent responses**: All errors follow the same JSON format
+4. **Easy debugging**: Descriptive error messages with context
+5. **Clean code**: No `.unwrap()` or `.expect()` in production code
+
+### Implementation Details
+
+For comprehensive documentation including:
+- Complete error architecture
+- Layer-by-layer implementation
+- Automatic conversion patterns
+- Best practices and troubleshooting
+- Common patterns and examples
+
+See **[THISERROR.md](THISERROR.md)**
 
 ## 📁 Project Structure
 

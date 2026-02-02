@@ -41,10 +41,9 @@ pub async fn create_todo(
 ) -> impl IntoResponse {
     app_state
         .todo_service
-        .create(&app_state.db, payload)
+        .create(payload)
         .await
         .map(|todo| (StatusCode::CREATED, Json(todo)).into_response())
-        .unwrap_or_else(|e| (StatusCode::INTERNAL_SERVER_ERROR, e).into_response())
 }
 
 #[utoipa::path(
@@ -59,7 +58,7 @@ pub async fn create_todo(
 pub async fn get_all(State(app_state): State<AppState>) -> impl IntoResponse {
     app_state
         .todo_service
-        .get_all(&app_state.db)
+        .get_all()
         .await
         .map(|todos| (StatusCode::OK, Json(todos)).into_response())
         .unwrap_or_else(|e| (StatusCode::INTERNAL_SERVER_ERROR, e).into_response())
@@ -85,10 +84,9 @@ pub async fn update_todo(
 ) -> impl IntoResponse {
     app_state
         .todo_service
-        .update(&app_state.db, id, payload)
+        .update(id, payload)
         .await
         .map(|todo| (StatusCode::OK, Json(todo)).into_response())
-        .unwrap_or_else(|e| (StatusCode::INTERNAL_SERVER_ERROR, e).into_response())
 }
 
 #[utoipa::path(
@@ -109,10 +107,9 @@ pub async fn get_by_id(
 ) -> impl IntoResponse {
     app_state
         .todo_service
-        .get_by_id(&app_state.db, id)
+        .get_by_id(id)
         .await
         .map(|todo| (StatusCode::OK, Json(todo)).into_response())
-        .unwrap_or_else(|e| (StatusCode::NOT_FOUND, e).into_response())
 }
 
 #[utoipa::path(
@@ -133,8 +130,7 @@ pub async fn delete_by_id(
 ) -> impl IntoResponse {
     app_state
         .todo_service
-        .delete_by_id(&app_state.db, id)
+        .delete_by_id(id)
         .await
         .map(|_| StatusCode::NO_CONTENT.into_response())
-        .unwrap_or_else(|e| (StatusCode::INTERNAL_SERVER_ERROR, e).into_response())
 }

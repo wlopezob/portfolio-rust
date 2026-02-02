@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use crate::{config::{app_info}, service::todo_service, types::AppState};
+use crate::{config::app_info, repository::todo_repository::{TodoRepositoryImpl, TodoRepositoryInterface}, service::todo_service::{self, TodoServiceImpl, TodoServiceInterface}, types::AppState};
 mod config;
 mod controller;
 mod routes;
@@ -8,6 +8,7 @@ mod types;
 mod model;
 mod service;
 mod api;
+mod repository;
 
 #[tokio::main]
 async fn main() { 
@@ -25,10 +26,12 @@ async fn main() {
 
 fn setup_app_state() -> AppState {
     let connection = sqlite::open("data/todo.db").unwrap();
-    let todo_service = Arc::new(todo_service::TodoServiceImpl{});
+    let db = Arc::new(Mutex::new(connection));
+    let todo_repository: Arc<dyn TodoRepositoryInterface> = Arc::new(TodoRepositoryImpl::new(db.clone()));
+    let todo_service: Arc<dyn TodoServiceInterface> = Arc::new(TodoServiceImpl::new(todo_repository));
 
     AppState::new(
-         Arc::new(Mutex::new(connection)),
+         db,
         todo_service
     )
 }
