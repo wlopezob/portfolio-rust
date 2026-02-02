@@ -22,10 +22,7 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-thiserror = "1.0"
-axum = "0.8.7"
-serde = { version = "1.0", features = ["derive"] }
-sqlite = "0.37.0"
+thiserror = "2.0.18"
 ```
 
 ### Key Components
