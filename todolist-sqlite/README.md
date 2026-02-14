@@ -16,18 +16,19 @@ A production-ready REST API built with Rust, featuring a clean architecture patt
 
 ## 📋 Table of Contents
 
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Endpoints](#api-endpoints)
-- [OpenAPI & Swagger UI](#openapi--swagger-ui)
-- [Error Handling with thiserror](#error-handling-with-thiserror)
-- [Project Structure](#project-structure)
-- [Sequence Diagrams](#sequence-diagrams)
-- [Development](#development)
-- [Design Patterns Used](#design-patterns-used)
-- [Best Practices](#best-practices)
+- [Architecture](#️-architecture)
+- [Tech Stack](#️-tech-stack)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [API Endpoints](#-api-endpoints)
+- [OpenAPI & Swagger UI](#-openapi--swagger-ui)
+- [Error Handling with thiserror](#-error-handling-with-thiserror)
+- [Configuration Manager](#️-configuration-manager)
+- [Project Structure](#-project-structure)
+- [Sequence Diagrams](#-sequence-diagrams)
+- [Development](#-development)
+- [Design Patterns Used](#-design-patterns-used)
+- [Best Practices](#-best-practices)
 
 ## 🏗️ Architecture
 
@@ -239,6 +240,66 @@ For comprehensive documentation including:
 - Common patterns and examples
 
 See **[THISERROR.md](THISERROR.md)**
+
+## ⚙️ Configuration Manager
+
+This project uses a **multi-environment configuration system** with YAML files, environment-based profiles, and automatic `.env` file loading for managing application settings.
+
+### Features
+
+✅ **Profile-based configuration** - Separate settings for dev, staging, and production  
+✅ **YAML configuration files** - Easy to read and maintain  
+✅ **Type-safe configuration** - Rust structs ensure validity  
+✅ **Configuration merging** - Base settings with profile overrides  
+✅ **Environment variables** - Via `PROFILE` from `.env` files  
+✅ **Automatic loading** - Using `dotenvy` crate  
+
+### Quick Start
+
+**1. Setup environment:**
+```bash
+# Copy template
+cp .env.example .env
+
+# Edit profile (already set to dev by default)
+echo "PROFILE=dev" > .env
+```
+
+**2. Run application:**
+```bash
+cargo run
+# Automatically loads .env and uses application-dev.yaml
+```
+
+**3. Switch environments:**
+```bash
+# For production
+echo "PROFILE=prod" > .env
+cargo run
+```
+
+### Configuration Flow
+
+```
+.env file (PROFILE=dev)
+    ↓
+dotenvy loads into environment
+    ↓
+config reads PROFILE variable
+    ↓
+Loads application.yaml + application-dev.yaml
+    ↓
+Type-safe AppSettings struct
+```
+
+### Implementation
+
+The configuration system uses:
+- **`config`** - Hierarchical YAML configuration
+- **`dotenvy`** - Automatic `.env` file loading
+- **`serde`** - Type-safe deserialization
+
+For detailed implementation guide, see **[CONF-MANAGER.md](CONF-MANAGER.md)**
 
 ## 📁 Project Structure
 

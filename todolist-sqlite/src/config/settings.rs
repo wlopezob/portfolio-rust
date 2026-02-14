@@ -17,6 +17,7 @@ pub struct AppConfig {
 pub struct OpenApiConfig {
     pub ui_path: String,
     pub json_path: String,
+    pub enabled: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -28,8 +29,11 @@ pub struct AppSettings {
 
 impl AppSettings {
     pub fn new() -> Result<Self, config::ConfigError> {
+        let profile = std::env::var("PROFILE").unwrap_or_else(|_| "dev".to_string());
         config::Config::builder()
             .add_source(config::File::with_name("src/properties/application.yaml"))
+            .add_source(config::File::with_name(&format!("src/properties/application-{}.yaml", 
+                profile)))
             .build()?
             .try_deserialize()
     }

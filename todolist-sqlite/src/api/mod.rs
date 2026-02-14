@@ -10,20 +10,24 @@ pub async fn start_server(app: Router, app_settings: &AppSettings, app_info: &Ap
             .await
             .unwrap();
 
+    print_startup_banner(&address, app_info, &app_settings);
+
     axum::serve(listener, app).await.unwrap();
     
-    print_startup_banner(&address, app_info, &app_settings.app.prefix);
+    
 
 }
 
-fn print_startup_banner(address: &str, app_info: &AppInfo, prefix: &str) {
+fn print_startup_banner(address: &str, app_info: &AppInfo, app_settings: &AppSettings) {
     println!("\n╔═══════════════════════════════════════════════════╗");
     println!("║  🚀 {} v{}", app_info.name, app_info.version);
     println!("║  📝 {}", app_info.description);
     println!("╠═══════════════════════════════════════════════════╣");
     println!("║  🌐 Server:  http://{}", address);
-    println!("║  📚 Swagger: http://{}{}/swagger-ui", address, prefix);
-    println!("║  📄 OpenAPI: http://{}{}/api-docs/openapi.json", address, prefix);
-    println!("║  🔗 API:     http://{}{}/todo", address, prefix);
+    if app_settings.openapi.enabled {
+        println!("║  📚 Swagger: http://{}{}/swagger-ui", address, app_settings.app.prefix);
+        println!("║  📄 OpenAPI: http://{}{}/api-docs/openapi.json", address, app_settings.app.prefix);
+    }
+    println!("║  🔗 API:     http://{}{}/todo", address, app_settings.app.prefix);
     println!("╚═══════════════════════════════════════════════════╝\n");
 }

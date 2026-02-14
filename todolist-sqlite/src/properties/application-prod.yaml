@@ -8,4 +8,4 @@ app:
 openapi:
   ui_path: "/swagger-ui"
   json_path: "/api-docs/openapi.json"
-  enabled: true
+  enabled: false

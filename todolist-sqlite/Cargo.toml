@@ -7,7 +7,6 @@ description = "An axum todo list project"
 [dependencies]
 async-trait = "0.1.89"
 axum = "0.8.7"
-config = "0.15.19"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 sqlite = "0.37.0"
@@ -16,3 +15,7 @@ utoipa = { version = "5.4.0", features = ["axum_extras"] }
 utoipa-axum = "0.2.0"
 utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
 thiserror = "2.0.18"
+# Environment variables
+dotenvy = "0.15"
+# Configuration management
+config = "0.15.19"

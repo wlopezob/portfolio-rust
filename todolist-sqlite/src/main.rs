@@ -12,6 +12,9 @@ mod repository;
 
 #[tokio::main]
 async fn main() { 
+    // Load environment variables from .env file
+    dotenvy::dotenv().ok();
+    
     // Load configuration
     let app_settings = config
         ::settings
@@ -19,7 +22,7 @@ async fn main() {
    
     let app_info = app_info::AppInfo::new();
     let app_state = setup_app_state();
-    let app = routes::build_router(&app_settings, app_state);
+    let app = routes::build_router(&app_settings, &app_info, app_state);
 
     api::start_server(app, &app_settings, &app_info).await;
 }
