@@ -9,6 +9,8 @@ mod model;
 mod service;
 mod api;
 mod repository;
+mod utils;
+mod validators;
 
 #[tokio::main]
 async fn main() { 
@@ -27,14 +29,26 @@ async fn main() {
     api::start_server(app, &app_settings, &app_info).await;
 }
 
+fn setup_database(connection: &sqlite::Connection) {
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS todos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            completed BOOLEAN NOT NULL DEFAULT 0,
+            max_date DATE NOT NULL
+        )"
+    ).unwrap();
+}
+
 fn setup_app_state() -> AppState {
     let connection = sqlite::open("data/todo.db").unwrap();
+    setup_database(&connection);
     let db = Arc::new(Mutex::new(connection));
     let todo_repository: Arc<dyn TodoRepositoryInterface> = Arc::new(TodoRepositoryImpl::new(db.clone()));
     let todo_service: Arc<dyn TodoServiceInterface> = Arc::new(TodoServiceImpl::new(todo_repository));
 
     AppState::new(
-         db,
+        db,
         todo_service
     )
 }

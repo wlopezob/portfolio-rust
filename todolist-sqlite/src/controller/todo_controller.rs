@@ -2,6 +2,7 @@ use crate::{
     config::open_api::TAG_TODO,
     model::{todo_item_request::TodoItemRequest, todo_item_response::TodoItemResponse},
     types::AppState,
+    validators::validated_json::ValidatedJson,
 };
 use axum::{
     Json,
@@ -37,7 +38,7 @@ impl TodoController {
     )]
 pub async fn create_todo(
     State(app_state): State<AppState>,
-    Json(payload): Json<TodoItemRequest>,
+    ValidatedJson(payload): ValidatedJson<TodoItemRequest>,
 ) -> impl IntoResponse {
     app_state
         .todo_service
@@ -80,7 +81,7 @@ pub async fn get_all(State(app_state): State<AppState>) -> impl IntoResponse {
 pub async fn update_todo(
     State(app_state): State<AppState>,
     Path(id): Path<i64>,
-    Json(payload): Json<TodoItemRequest>,
+    ValidatedJson(payload): ValidatedJson<TodoItemRequest>,
 ) -> impl IntoResponse {
     app_state
         .todo_service

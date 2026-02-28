@@ -34,13 +34,15 @@ impl TodoServiceInterface for TodoServiceImpl {
             id: 0,
             title: todo_item.title,
             completed: todo_item.completed,
+            max_date: todo_item.max_date,
         };
         let todo_item_response = self.todo_repository.create(todo_item).await?;
-        
+
         let response_payload = TodoItemResponse {
             id: Some(todo_item_response.id),
             title: todo_item_response.title,
             completed: todo_item_response.completed,
+            max_date: todo_item_response.max_date,
         };
 
         Ok(response_payload)
@@ -54,6 +56,7 @@ impl TodoServiceInterface for TodoServiceImpl {
                 id: Some(row.id),
                 title: row.title.clone(),
                 completed: row.completed,
+                max_date: row.max_date.clone(),
             })
             .collect::<Vec<TodoItemResponse>>();
         Ok(todos)
@@ -66,6 +69,7 @@ impl TodoServiceInterface for TodoServiceImpl {
                 id: Some(row.id),
                 title: row.title,
                 completed: row.completed,
+                max_date: row.max_date,
             })
     }
 
@@ -74,12 +78,14 @@ impl TodoServiceInterface for TodoServiceImpl {
             id,
             title: todo_item.title,
             completed: todo_item.completed,
+            max_date: todo_item.max_date,
         };
-        let todo_item_response =self.todo_repository.update(id, todo_item).await?;
+        let todo_item_response = self.todo_repository.update(id, todo_item).await?;
         let response_payload = TodoItemResponse {
             id: Some(todo_item_response.id),
             title: todo_item_response.title,
             completed: todo_item_response.completed,
+            max_date: todo_item_response.max_date,
         };
         Ok(response_payload)
     }

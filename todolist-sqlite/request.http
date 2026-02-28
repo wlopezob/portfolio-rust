@@ -11,7 +11,8 @@ Content-Type: application/json
 
 {
   "title": "New Todo Item 09",
-  "completed": false
+  "completed": false,
+  "maxDate": "31/12/2026"
 }
 
 ### 4. Update an existing todo item.

@@ -17,4 +17,8 @@ pub struct TodoItemResponse {
     /// Indicates whether the todo item has been completed
     #[schema(example = false)]
     pub completed: bool,
+
+    /// Deadline for the todo item in DD/MM/YYYY format
+    #[schema(example = "31/12/2025")]
+    pub max_date: String,
 }

@@ -23,6 +23,7 @@ A production-ready REST API built with Rust, featuring a clean architecture patt
 - [API Endpoints](#-api-endpoints)
 - [OpenAPI & Swagger UI](#-openapi--swagger-ui)
 - [Error Handling with thiserror](#-error-handling-with-thiserror)
+- [Validation](#-validation)
 - [Configuration Manager](#️-configuration-manager)
 - [Project Structure](#-project-structure)
 - [Sequence Diagrams](#-sequence-diagrams)
@@ -137,6 +138,29 @@ This project implements **robust error handling** using `thiserror` with automat
 ```
 
 For detailed implementation guide, see **[THISERROR.md](THISERROR.md)**
+
+## ✅ Validation
+
+This project implements **request validation** using the `validator` crate and a custom axum extractor that enforces rules before requests reach the handler.
+
+### Features
+
+✅ **Custom `ValidatedJson<T>` extractor** - deserialization + validation in one step
+✅ **Consistent error responses** - all failures return `ApiException::BadRequest`
+✅ **Field-level rules** - minimum length, custom date format
+✅ **Date validation** - format, calendar correctness, and present-or-future check
+✅ **ISO 8601 storage** - dates stored as `YYYY-MM-DD`, returned as `DD/MM/YYYY`
+
+### Error Response Format
+
+```json
+{
+  "code": "400 Bad Request",
+  "message": "max_date: Date must be greater than or equal to current date"
+}
+```
+
+For detailed implementation guide, see **[VALIDATION.md](VALIDATION.md)**
 
 ## ⚙️ Configuration Manager
 
